@@ -1,0 +1,91 @@
+# SPDX-License-Identifier: GPL-2.0-only
+#
+# Copyright (c) 2026 Huawei Technologies Co., Ltd. All Rights Reserved.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as
+# published by the Free Software Foundation; version 2.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+
+menuconfig UB_UBFM
+    default n
+    tristate "UBFM support"
+    depends on UB
+    help
+      This option enables UBFM (Unified Bus Fabric Manager) driver support.
+      This includes fabric management, device management, link communication, 
+      message/control queues, authentication, and shared memory modules.
+      Say m here to build as module.
+      If unsure, say N.
+
+if UB_UBFM
+
+config UBFM_ACC_LDST
+    default y
+    bool "UBFM LDST access channel support"
+    depends on UB_UBFM
+    help
+      Enable LDST (Local Direct Store) access channel.
+      This is the default channel for local device access.
+      If unsure, say Y.
+
+comment "UBFM CDMA access channel support (UBFM_ACC_CDMA): needs UB_CDMA enabled"
+    depends on UB_UBFM && UB_CDMA = n
+
+config UBFM_ACC_CDMA
+    default n
+    bool "UBFM CDMA access channel support"
+    depends on UB_UBFM && UB_CDMA
+    select UBFM_ACC_LDST
+    help
+      Enable CDMA (DMA engine) access channel for inband device access.
+      This channel uses the DMA engine for data transfer and USI (UBus
+      Interrupt) for interrupt handling. Requires the CDMA driver
+      (CONFIG_UB_CDMA) to be enabled. Automatically enables LDST as
+      a complementary local access channel (select UBFM_ACC_LDST).
+      If unsure, say N.
+
+config UBFM_ACC_PCIE_FPGA
+    default n
+    bool "UBFM PCIE-FPGA access channel support"
+    depends on UB_UBFM
+    help
+      Enable PCIE+FPGA access channel for outband device access.
+      This channel accesses devices through PCIE bus and uses the
+      UCMI (Unified Control Module Interface) mechanism for dynamic
+      register window mapping via FPGA backplane.
+      Select this only when the target platform has PCIE+FPGA hardware and 
+      you need outband access to devices.
+      If unsure, say N.
+
+config UBFM_ACC_PCIE_I3C
+    default n
+    bool "UBFM PCIE-I3C access channel support"
+    depends on UB_UBFM
+    select UBFM_ACC_PCIE_FPGA
+    help
+      Enable PCIE+I3C access channel for outband device access.
+      This channel accesses devices through the PCIE bus and uses the I3C bus
+      for sideband control and management. Selecting this automatically enables
+      the PCIE-FPGA access channel (select UBFM_ACC_PCIE_FPGA).
+      Select this only when the target platform has PCIE+I3C hardware and
+      you need outband access to devices via I3C.
+      If unsure, say N.
+
+config UBFM_DEBUG
+    default n
+    bool "UBFM debug mode"
+    depends on UB_UBFM
+    help
+      Enable debug build mode. This enables debug-only features such as
+      fault injection via sysfs, RAS test interfaces, PCIE window inspection, 
+      and TPL/MDP data dump interfaces. These are for development and integration testing only 
+      and must not be enabled in production/release builds.
+      If unsure, say N.
+
+endif # UB_UBFM
